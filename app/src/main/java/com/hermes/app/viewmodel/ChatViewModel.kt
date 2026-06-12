@@ -22,6 +22,7 @@ data class ChatUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val isConnected: Boolean = false,
+    val checkingConnection: Boolean = false,
     val currentSessionId: String? = null,
 )
 
@@ -55,8 +56,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     fun checkConnection() {
         viewModelScope.launch {
+            _state.update { it.copy(checkingConnection = true, error = null) }
             val result = api?.health()
-            _state.update { it.copy(isConnected = result?.isSuccess == true) }
+            _state.update { it.copy(isConnected = result?.isSuccess == true, checkingConnection = false) }
         }
     }
 

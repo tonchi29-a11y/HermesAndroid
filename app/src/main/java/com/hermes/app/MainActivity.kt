@@ -56,6 +56,7 @@ class MainActivity : ComponentActivity() {
                         SettingsScreen(
                             prefs = prefs,
                             isConnected = chatState.isConnected,
+                            checkingConnection = chatState.checkingConnection,
                             onCheckConnection = { chatViewModel.checkConnection() },
                             onNavigateBack = { navController.popBackStack() },
                         )

@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     prefs: AppPreferences,
     isConnected: Boolean,
+    checkingConnection: Boolean,
     onCheckConnection: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
@@ -33,7 +34,6 @@ fun SettingsScreen(
     var apiKey by remember { mutableStateOf("") }
     var showApiKey by remember { mutableStateOf(false) }
     var isSaved by remember { mutableStateOf(false) }
-    var isChecking by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
@@ -162,14 +162,12 @@ fun SettingsScreen(
             ) {
                 OutlinedButton(
                     onClick = {
-                        isChecking = true
-                        onCheckConnection()
-                        isChecking = false
+                        scope.launch { onCheckConnection() }
                     },
                     modifier = Modifier.weight(1f),
-                    enabled = !isChecking,
+                    enabled = !checkingConnection,
                 ) {
-                    if (isChecking) {
+                    if (checkingConnection) {
                         CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                         Spacer(Modifier.width(8.dp))
                     }
