@@ -1,6 +1,8 @@
 package com.hermes.app.ui.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -48,7 +50,7 @@ fun SessionCard(
 
             IconButton(onClick = onDelete) {
                 Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Outlined.Delete,
+                    imageVector = Icons.Outlined.Delete,
                     contentDescription = "Delete",
                     tint = MaterialTheme.colorScheme.error,
                 )
