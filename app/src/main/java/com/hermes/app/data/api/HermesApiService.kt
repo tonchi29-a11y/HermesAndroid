@@ -103,7 +103,7 @@ class HermesApiService(
         }.execute { response ->
             val channel = response.bodyAsChannel()
             while (!channel.isClosedForRead) {
-                val line = channel.readUTF8Line() ?: break
+                val line = channel.readUTF8Line(limit = 4096) ?: break
                 if (line.startsWith("data: ")) {
                     val data = line.removePrefix("data: ")
                     if (data != "[DONE]") {
