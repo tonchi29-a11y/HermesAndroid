@@ -81,28 +81,47 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         viewModelScope.launch {
-            val chatMessages = currentMessages
-                .filter { !it.isStreaming }
-                .map { ChatMessage(it.role, it.content) } + ChatMessage("user", text)
+            try {
+                val chatMessages = currentMessages
+                    .filter { !it.isStreaming }
+                    .map { ChatMessage(it.role, it.content) } + ChatMessage("user", text)
 
-            val result = repo?.sendMessage(chatMessages)
-            result?.onSuccess { response ->
-                val reply = response.choices.firstOrNull()?.message?.content ?: ""
-                _state.update {
-                    val updated = it.messages.map { msg ->
-                        if (msg.id == assistantMsgId) {
-                            msg.copy(content = reply, isStreaming = false)
-                        } else msg
+                val result = repo?.sendMessage(chatMessages)
+                result?.onSuccess { response ->
+                    val reply = response.choices.firstOrNull()?.message?.content ?: ""
+                    _state.update {
+                        val updated = it.messages.map { msg ->
+                            if (msg.id == assistantMsgId) {
+                                msg.copy(content = reply, isStreaming = false)
+                            } else msg
+                        }
+                        it.copy(messages = updated, isLoading = false)
                     }
-                    it.copy(messages = updated, isLoading = false)
+                }?.onFailure { e ->
+                    _state.update {
+                        val filtered = it.messages.filter { msg -> msg.id != assistantMsgId }
+                        it.copy(
+                            messages = filtered,
+                            isLoading = false,
+                            error = "API error: ${e.message}",
+                        )
+                    }
+                } ?: run {
+                    // repo is null - still initializing
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Hermes not initialized yet. Try again.",
+                        )
+                    }
                 }
-            }?.onFailure { e ->
+            } catch (e: Exception) {
                 _state.update {
                     val filtered = it.messages.filter { msg -> msg.id != assistantMsgId }
                     it.copy(
                         messages = filtered,
                         isLoading = false,
-                        error = e.message ?: "Request failed",
+                        error = "Crash: ${e::class.simpleName}: ${e.message}",
                     )
                 }
             }
