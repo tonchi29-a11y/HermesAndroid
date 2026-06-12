@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 import com.hermes.app.data.preferences.AppPreferences
 import com.hermes.app.ui.theme.StatusGreen
 import com.hermes.app.ui.theme.StatusRed
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,6 +35,7 @@ fun SettingsScreen(
     var isSaved by remember { mutableStateOf(false) }
     var isChecking by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
 
     // Load current values
     LaunchedEffect(Unit) {
@@ -47,7 +50,7 @@ fun SettingsScreen(
                 title = { Text("Settings") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -111,7 +114,7 @@ fun SettingsScreen(
                 onValueChange = { host = it },
                 label = { Text("Host") },
                 placeholder = { Text("127.0.0.1") },
-                leadingIcon = { Icon(Icons.Outlined.Dns, contentDescription = null) },
+                leadingIcon = { Icon(Icons.Filled.Dns, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
             )
@@ -123,7 +126,7 @@ fun SettingsScreen(
                 onValueChange = { port = it.filter { c -> c.isDigit() } },
                 label = { Text("Port") },
                 placeholder = { Text("8642") },
-                leadingIcon = { Icon(Icons.Outlined.Tag, contentDescription = null) },
+                leadingIcon = { Icon(Icons.Filled.Tag, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -136,11 +139,11 @@ fun SettingsScreen(
                 onValueChange = { apiKey = it },
                 label = { Text("API Key (optional)") },
                 placeholder = { Text("sk-...") },
-                leadingIcon = { Icon(Icons.Outlined.Key, contentDescription = null) },
+                leadingIcon = { Icon(Icons.Filled.Key, contentDescription = null) },
                 trailingIcon = {
                     IconButton(onClick = { showApiKey = !showApiKey }) {
                         Icon(
-                            if (showApiKey) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
+                            if (showApiKey) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
                             contentDescription = if (showApiKey) "Hide" else "Show",
                         )
                     }
@@ -175,14 +178,16 @@ fun SettingsScreen(
 
                 Button(
                     onClick = {
-                        prefs.saveHost(host)
-                        prefs.savePort(port.toIntOrNull() ?: 8642)
-                        prefs.saveApiKey(apiKey)
+                        scope.launch {
+                            prefs.saveHost(host)
+                            prefs.savePort(port.toIntOrNull() ?: 8642)
+                            prefs.saveApiKey(apiKey)
+                        }
                         isSaved = true
                     },
                     modifier = Modifier.weight(1f),
                 ) {
-                    Icon(Icons.Outlined.Save, contentDescription = null)
+                    Icon(Icons.Filled.Save, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text("Save")
                 }
