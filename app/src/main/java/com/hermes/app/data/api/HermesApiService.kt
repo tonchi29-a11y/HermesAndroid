@@ -35,7 +35,7 @@ class HermesApiService(
         defaultRequest {
             contentType(ContentType.Application.Json)
             apiKey?.let {
-                header("X-API-Key", it)
+                header("Authorization", "Bearer $it")
             }
         }
     }
