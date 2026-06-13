@@ -33,8 +33,14 @@ data class ChatCompletionResponse(
 @Serializable
 data class Choice(
     @SerialName("index") val index: Int,
-    @SerialName("message") val message: ChatMessage,
+    @SerialName("message") val message: ResponseMessage? = null,
     @SerialName("finish_reason") val finishReason: String? = null,
+)
+
+@Serializable
+data class ResponseMessage(
+    @SerialName("role") val role: String? = null,
+    @SerialName("content") val content: String? = null,
 )
 
 @Serializable
@@ -119,8 +125,8 @@ data class SessionMessages(
 
 @Serializable
 data class SessionMessage(
-    @SerialName("role") val role: String,
-    @SerialName("content") val content: String,
+    @SerialName("role") val role: String? = null,
+    @SerialName("content") val content: String? = null,
     @SerialName("created_at") val createdAt: String? = null,
 )
 

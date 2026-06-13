@@ -1,12 +1,14 @@
 package com.hermes.app.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hermes.app.data.api.ChatMessage
 import com.hermes.app.data.api.HermesApiService
 import com.hermes.app.data.preferences.AppPreferences
 import com.hermes.app.data.repository.HermesRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -38,16 +40,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch {
-            prefs.host.collect { host ->
-                prefs.port.collect { port ->
-                    prefs.apiKey.collect { key ->
-                        val url = "http://$host:$port"
-                        val service = HermesApiService(url, key.ifEmpty { null })
-                        api = service
-                        repo = HermesRepository(service)
-                        checkConnection()
-                    }
-                }
+            combine(prefs.host, prefs.port, prefs.apiKey) { host, port, key ->
+                Triple(host, port, key)
+            }.collect { (host, port, key) ->
+                val url = "http://$host:$port"
+                val service = HermesApiService(url, key.ifEmpty { null })
+                api = service
+                repo = HermesRepository(service)
+                checkConnection()
             }
         }
     }
@@ -98,6 +98,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                         it.copy(messages = updated, isLoading = false)
                     }
                 }?.onFailure { e ->
+                    Log.e("HermesChat", "API error: ${e.message}", e)
                     _state.update {
                         val filtered = it.messages.filter { msg -> msg.id != assistantMsgId }
                         it.copy(
@@ -115,13 +116,16 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                         )
                     }
                 }
-            } catch (e: Exception) {
+            } catch (e: CancellationException) {
+                throw e // don't swallow cancellation
+            } catch (e: Throwable) {
+                Log.e("HermesChat", "Fatal crash in sendMessage", e)
                 _state.update {
                     val filtered = it.messages.filter { msg -> msg.id != assistantMsgId }
                     it.copy(
                         messages = filtered,
                         isLoading = false,
-                        error = "Crash: ${e::class.simpleName}: ${e.message}",
+                        error = "Error: ${e::class.simpleName}: ${e.message}",
                     )
                 }
             }
